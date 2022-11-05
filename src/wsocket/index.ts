@@ -16,7 +16,11 @@ interface IWSocketMove {
 }
 
 export const initWSocket = (httpServer: HttpServer) => {
-  const io = new SocketIoServer(httpServer);
+  const io = new SocketIoServer(httpServer, {
+    cors: {
+      origin: "*",
+    },
+  });
 
   io.on("connection", (socket) => {
     socket.on("join-group", ({ idGame, user }: IWSocketJoinGroup) => {

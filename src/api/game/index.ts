@@ -17,11 +17,13 @@ router.put("/join/:id", (req, res) => {
 
 router.post("/", (req, res) => {
   try {
+    console.log(req.body);
     const user = req.body.user;
     const game = createGame(user);
     res.json({ data: { game } });
   } catch (error) {
-    res.json({ error });
+    console.error(error);
+    res.status(500).json({ error });
   }
 });
 

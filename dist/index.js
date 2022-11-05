@@ -33655,7 +33655,6 @@ var mod = /* @__PURE__ */ Object.freeze({
 // src/types/index.ts
 var EGameStatus = /* @__PURE__ */ ((EGameStatus2) => {
   EGameStatus2["CREATED"] = "CREATED";
-  EGameStatus2["PREPARED"] = "PREPARED";
   EGameStatus2["PLAYING"] = "PLAYING";
   EGameStatus2["FINISH"] = "FINISH";
   return EGameStatus2;
@@ -33687,6 +33686,7 @@ var ZGameSchema = mod.object({
   start: mod.date(),
   users: mod.tuple([ZUserSchema, mod.union([ZUserSchema, mod.null()])]),
   status: ZEnumGameStatus,
+  winner: mod.union([ZEnumPlayerTurn, mod.null()]),
   turn: ZEnumPlayerTurn,
   board: ZBoardSchema
 });
@@ -33733,6 +33733,7 @@ var createGame = (user) => {
     users: [user, null],
     status: "CREATED" /* CREATED */,
     turn: "FIRST" /* FIRST */,
+    winner: null,
     board: [
       ["VOID" /* VOID */, "VOID" /* VOID */, "VOID" /* VOID */],
       ["VOID" /* VOID */, "VOID" /* VOID */, "VOID" /* VOID */],
@@ -33752,6 +33753,7 @@ var joinUser = (user, id) => {
   if (isComplete)
     return null;
   game.users[1] = user;
+  game.status = "PLAYING" /* PLAYING */;
   return game;
 };
 var isUserInGame = (user, id) => {
@@ -33759,6 +33761,73 @@ var isUserInGame = (user, id) => {
   if (!game)
     return null;
   return game.users.find((u) => (u == null ? void 0 : u.nickname) === user.nickname) ? game : null;
+};
+var whichTypeIsUser = (game, user) => {
+  const index = game.users.findIndex((u) => (u == null ? void 0 : u.nickname) === user.nickname);
+  if (index === 0) {
+    return "FIRST" /* FIRST */;
+  }
+  if (index === 1) {
+    return "SECOND" /* SECOND */;
+  }
+  return null;
+};
+var cellIsAvailable = (game, row, cell) => {
+  if (game.winner)
+    return false;
+  if (game.status !== "PLAYING" /* PLAYING */)
+    return false;
+  const cellBoard = game.board[row][cell];
+  return cellBoard !== "VOID" /* VOID */;
+};
+var move = (game, user, row, cell) => {
+  const isAvailable = cellIsAvailable(game, row, cell);
+  if (!isAvailable)
+    return null;
+  const type = whichTypeIsUser(game, user);
+  if (!type)
+    return null;
+  const isMatchFirst = game.turn === "FIRST" /* FIRST */ && type === "FIRST" /* FIRST */;
+  const isMatchSecond = game.turn === "SECOND" /* SECOND */ && type === "SECOND" /* SECOND */;
+  if (!(isMatchFirst || isMatchSecond))
+    return null;
+  game.board[row][cell] = type;
+  const cellWinner = getWinner(game);
+  if (cellWinner) {
+    game.winner = cellWinner === "FIRST" /* FIRST */ ? "FIRST" /* FIRST */ : "SECOND" /* SECOND */;
+  } else {
+    if (isMatchFirst)
+      game.turn = "SECOND" /* SECOND */;
+    if (isMatchSecond)
+      game.turn = "FIRST" /* FIRST */;
+  }
+  return game;
+};
+var getWinner = (game) => {
+  const row = game.board.find((row2) => {
+    return row2[0] === row2[1] && row2[0] === row2[2];
+  });
+  const inRow = row ? row[0] : false;
+  if (inRow)
+    return inRow;
+  let inColumn = false;
+  for (let index = 0; index < 3; index++) {
+    const first = game.board[0][index];
+    const a = first === game.board[1][index];
+    const b = game.board[1][index] === game.board[2][index];
+    if (a && b) {
+      inColumn = first;
+      break;
+    }
+  }
+  if (inColumn)
+    return inColumn;
+  const centerCell = game.board[1][1];
+  const leftToRight = game.board[0][0] === centerCell && game.board[2][2] === centerCell;
+  const rightToLeft = game.board[0][2] === centerCell && game.board[2][0] === centerCell;
+  if (leftToRight || rightToLeft)
+    return centerCell;
+  return false;
 };
 
 // src/wsocket/index.ts
@@ -33771,10 +33840,12 @@ var initWSocket = (httpServer2) => {
         return;
       socket.join("game-" + game.id);
     });
-    socket.on("move", ({ idGame, user }) => {
+    socket.on("move", ({ idGame, user, row, cell }) => {
       const game = isUserInGame(user, idGame);
       if (!game)
         return;
+      const gameUpdated = move(game, user, row, cell);
+      io2.to("game-" + game.id).emit("moved", gameUpdated);
     });
   });
 };
@@ -33798,11 +33869,13 @@ router.put("/join/:id", (req, res) => {
 });
 router.post("/", (req, res) => {
   try {
+    console.log(req.body);
     const user = req.body.user;
     const game = createGame(user);
     res.json({ data: { game } });
   } catch (error) {
-    res.json({ error });
+    console.error(error);
+    res.status(500).json({ error });
   }
 });
 router.get("/:id", (req, res) => {

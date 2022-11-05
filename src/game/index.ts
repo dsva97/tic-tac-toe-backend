@@ -40,7 +40,7 @@ export const joinUser = (user: IUser, id: IdGame) => {
   const game = games.get(id);
   if (!game) return null;
   const isComplete = game.users.every((u) => !!u);
-  if (!isComplete) return null;
-  game.users.push(user);
+  if (isComplete) return null;
+  game.users[1] = user;
   return game;
 };

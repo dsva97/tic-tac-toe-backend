@@ -33754,14 +33754,25 @@ var joinUser = (user, id) => {
   if (!game)
     return null;
   const isComplete = game.users.every((u) => !!u);
-  if (!isComplete)
+  if (isComplete)
     return null;
-  game.users.push(user);
+  game.users[1] = user;
   return game;
 };
 
 // src/api/game/index.ts
 var router = (0, import_express.Router)();
+router.put("/join/:id", (req, res) => {
+  try {
+    const id = req.params.id;
+    const user = req.body.user;
+    const game = joinUser(user, id);
+    res.json({ data: { game } });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error });
+  }
+});
 router.post("/", (req, res) => {
   try {
     const user = req.body.user;
@@ -33784,16 +33795,6 @@ router.get("/", (_req, res) => {
   try {
     const games2 = getAll();
     res.json({ data: { games: games2 } });
-  } catch (error) {
-    res.json({ error });
-  }
-});
-router.put("/join/:id", (req, res) => {
-  try {
-    const id = req.params.id;
-    const user = req.body.user;
-    const game = joinUser(user, id);
-    res.json({ data: { game } });
   } catch (error) {
     res.json({ error });
   }

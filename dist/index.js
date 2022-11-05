@@ -17183,17 +17183,17 @@ var require_router = __commonJS({
     var toString = Object.prototype.toString;
     var proto = module2.exports = function(options) {
       var opts = options || {};
-      function router(req, res, next) {
-        router.handle(req, res, next);
+      function router3(req, res, next) {
+        router3.handle(req, res, next);
       }
-      setPrototypeOf(router, proto);
-      router.params = {};
-      router._params = [];
-      router.caseSensitive = opts.caseSensitive;
-      router.mergeParams = opts.mergeParams;
-      router.strict = opts.strict;
-      router.stack = [];
-      return router;
+      setPrototypeOf(router3, proto);
+      router3.params = {};
+      router3._params = [];
+      router3.caseSensitive = opts.caseSensitive;
+      router3.mergeParams = opts.mergeParams;
+      router3.strict = opts.strict;
+      router3.stack = [];
+      return router3;
     };
     proto.param = function param(name, fn) {
       if (typeof name === "function") {
@@ -19805,7 +19805,7 @@ var require_application = __commonJS({
   "node_modules/.pnpm/express@4.18.2/node_modules/express/lib/application.js"(exports, module2) {
     "use strict";
     var finalhandler = require_finalhandler();
-    var Router = require_router();
+    var Router3 = require_router();
     var methods = require_methods();
     var middleware = require_init();
     var query = require_query();
@@ -19870,7 +19870,7 @@ var require_application = __commonJS({
     };
     app2.lazyrouter = function lazyrouter() {
       if (!this._router) {
-        this._router = new Router({
+        this._router = new Router3({
           caseSensitive: this.enabled("case sensitive routing"),
           strict: this.enabled("strict routing")
         });
@@ -19879,17 +19879,17 @@ var require_application = __commonJS({
       }
     };
     app2.handle = function handle(req, res, callback) {
-      var router = this._router;
+      var router3 = this._router;
       var done = callback || finalhandler(req, res, {
         env: this.get("env"),
         onerror: logerror.bind(this)
       });
-      if (!router) {
+      if (!router3) {
         debug("no routes defined on app");
         done();
         return;
       }
-      router.handle(req, res, done);
+      router3.handle(req, res, done);
     };
     app2.use = function use(fn) {
       var offset = 0;
@@ -19909,15 +19909,15 @@ var require_application = __commonJS({
         throw new TypeError("app.use() requires a middleware function");
       }
       this.lazyrouter();
-      var router = this._router;
+      var router3 = this._router;
       fns.forEach(function(fn2) {
         if (!fn2 || !fn2.handle || !fn2.set) {
-          return router.use(path, fn2);
+          return router3.use(path, fn2);
         }
         debug(".use app under %s", path);
         fn2.mountpath = path;
         fn2.parent = this;
-        router.use(path, function mounted_app(req, res, next) {
+        router3.use(path, function mounted_app(req, res, next) {
           var orig = req.app;
           fn2.handle(req, res, function(err) {
             setPrototypeOf(req, orig.request);
@@ -21732,7 +21732,7 @@ var require_express = __commonJS({
     var mixin = require_merge_descriptors();
     var proto = require_application();
     var Route = require_route();
-    var Router = require_router();
+    var Router3 = require_router();
     var req = require_request();
     var res = require_response();
     exports = module2.exports = createApplication;
@@ -21755,7 +21755,7 @@ var require_express = __commonJS({
     exports.request = req;
     exports.response = res;
     exports.Route = Route;
-    exports.Router = Router;
+    exports.Router = Router3;
     exports.json = bodyParser.json;
     exports.query = require_query();
     exports.raw = bodyParser.raw;
@@ -30568,7 +30568,7 @@ var require_dist2 = __commonJS({
 });
 
 // src/index.ts
-var import_express = __toESM(require_express2());
+var import_express3 = __toESM(require_express2());
 var import_http = require("http");
 var import_cors = __toESM(require_lib3());
 
@@ -30586,8 +30586,23 @@ var initWSocket = (httpServer2) => {
   });
 };
 
+// src/api/index.ts
+var import_express2 = __toESM(require_express2());
+
+// src/api/session/index.ts
+var import_express = __toESM(require_express2());
+var router = (0, import_express.Router)();
+router.use("/login", (req, res) => res.json({ data: "Hi" }));
+var sessionRouter = router;
+
+// src/api/index.ts
+var router2 = (0, import_express2.Router)();
+router2.use("/session", sessionRouter);
+var apiRouter = router2;
+
 // src/index.ts
-var app = (0, import_express.default)();
+var app = (0, import_express3.default)();
+app.use("/api", apiRouter);
 app.use((0, import_cors.default)());
 var httpServer = (0, import_http.createServer)(app);
 initWSocket(httpServer);

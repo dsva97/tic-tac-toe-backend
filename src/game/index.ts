@@ -78,8 +78,6 @@ const whichTypeIsUser = (game: IGame, user: IUser): ECell | null => {
 const cellIsAvailable = (game: IGame, row: IRowIndex, cell: ICellIndex) => {
   if (game.winner) return false;
 
-  console.log(game.status, EGameStatus.PLAYING);
-
   if (game.status !== EGameStatus.PLAYING) return false;
 
   const cellBoard = game.board[row][cell];

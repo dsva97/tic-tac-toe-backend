@@ -18,7 +18,7 @@ app.use("/api", apiRouter);
 
 app.use(express.static(FRONTEND_PATH));
 
-app.get("/", (_req, res) =>
+app.get("*", (_req, res) =>
   res.sendFile(path.resolve(FRONTEND_PATH, "index.html"))
 );
 

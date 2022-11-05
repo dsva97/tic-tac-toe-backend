@@ -23,6 +23,7 @@ export const initWSocket = (httpServer: HttpServer) => {
   });
 
   io.on("connection", (socket) => {
+    console.log("socket connected : " + socket.id);
     socket.on("join-group", ({ idGame, user }: IWSocketJoinGroup) => {
       const game = isUserInGame(user, idGame);
       if (!game) return;
@@ -31,9 +32,12 @@ export const initWSocket = (httpServer: HttpServer) => {
     });
 
     socket.on("move", ({ idGame, user, row, cell }: IWSocketMove) => {
+      console.log(idGame, user, row, cell, "move");
       const game = isUserInGame(user, idGame);
+      console.log(game);
       if (!game) return;
       const gameUpdated = move(game, user, row, cell);
+      if (!gameUpdated) return;
       io.to("game-" + game.id).emit("moved", gameUpdated);
     });
   });

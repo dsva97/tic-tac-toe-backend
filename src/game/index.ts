@@ -78,10 +78,12 @@ const whichTypeIsUser = (game: IGame, user: IUser): ECell | null => {
 const cellIsAvailable = (game: IGame, row: IRowIndex, cell: ICellIndex) => {
   if (game.winner) return false;
 
+  console.log(game.status, EGameStatus.PLAYING);
+
   if (game.status !== EGameStatus.PLAYING) return false;
 
   const cellBoard = game.board[row][cell];
-  return cellBoard !== ECell.VOID;
+  return cellBoard === ECell.VOID;
 };
 
 export const move = (
@@ -119,7 +121,7 @@ export const move = (
 
 const getWinner = (game: IGame) => {
   const row = game.board.find((row) => {
-    return row[0] === row[1] && row[0] === row[2];
+    return row[0] === row[1] && row[0] === row[2] && row[0] !== "VOID";
   });
   const inRow = row ? row[0] : false;
   if (inRow) return inRow;
@@ -129,7 +131,7 @@ const getWinner = (game: IGame) => {
     const first = game.board[0][index];
     const a = first === game.board[1][index];
     const b = game.board[1][index] === game.board[2][index];
-    if (a && b) {
+    if (a && b && first !== "VOID") {
       inColumn = first;
       break;
     }
@@ -144,7 +146,7 @@ const getWinner = (game: IGame) => {
   const rightToLeft =
     game.board[0][2] === centerCell && game.board[2][0] === centerCell;
 
-  if (leftToRight || rightToLeft) return centerCell;
+  if ((leftToRight || rightToLeft) && centerCell !== "VOID") return centerCell;
 
   return false;
 };

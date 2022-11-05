@@ -33778,10 +33778,11 @@ var whichTypeIsUser = (game, user) => {
 var cellIsAvailable = (game, row, cell) => {
   if (game.winner)
     return false;
+  console.log(game.status, "PLAYING" /* PLAYING */);
   if (game.status !== "PLAYING" /* PLAYING */)
     return false;
   const cellBoard = game.board[row][cell];
-  return cellBoard !== "VOID" /* VOID */;
+  return cellBoard === "VOID" /* VOID */;
 };
 var move = (game, user, row, cell) => {
   const isAvailable = cellIsAvailable(game, row, cell);
@@ -33808,7 +33809,7 @@ var move = (game, user, row, cell) => {
 };
 var getWinner = (game) => {
   const row = game.board.find((row2) => {
-    return row2[0] === row2[1] && row2[0] === row2[2];
+    return row2[0] === row2[1] && row2[0] === row2[2] && row2[0] !== "VOID";
   });
   const inRow = row ? row[0] : false;
   if (inRow)
@@ -33818,7 +33819,7 @@ var getWinner = (game) => {
     const first = game.board[0][index];
     const a = first === game.board[1][index];
     const b = game.board[1][index] === game.board[2][index];
-    if (a && b) {
+    if (a && b && first !== "VOID") {
       inColumn = first;
       break;
     }
@@ -33828,7 +33829,7 @@ var getWinner = (game) => {
   const centerCell = game.board[1][1];
   const leftToRight = game.board[0][0] === centerCell && game.board[2][2] === centerCell;
   const rightToLeft = game.board[0][2] === centerCell && game.board[2][0] === centerCell;
-  if (leftToRight || rightToLeft)
+  if ((leftToRight || rightToLeft) && centerCell !== "VOID")
     return centerCell;
   return false;
 };
@@ -33841,6 +33842,7 @@ var initWSocket = (httpServer2) => {
     }
   });
   io2.on("connection", (socket) => {
+    console.log("socket connected : " + socket.id);
     socket.on("join-group", ({ idGame, user }) => {
       const game = isUserInGame(user, idGame);
       if (!game)
@@ -33849,10 +33851,14 @@ var initWSocket = (httpServer2) => {
       socket.join("game-" + game.id);
     });
     socket.on("move", ({ idGame, user, row, cell }) => {
+      console.log(idGame, user, row, cell, "move");
       const game = isUserInGame(user, idGame);
+      console.log(game);
       if (!game)
         return;
       const gameUpdated = move(game, user, row, cell);
+      if (!gameUpdated)
+        return;
       io2.to("game-" + game.id).emit("moved", gameUpdated);
     });
   });

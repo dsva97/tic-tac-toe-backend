@@ -30730,19 +30730,6 @@ var PORT = Number(process.env.PORT) || 3030;
 var import_dist = __toESM(require_dist2(), 1);
 var { Server, Namespace, Socket } = import_dist.default;
 
-// src/wsocket/index.ts
-var initWSocket = (httpServer2) => {
-  const socket = new Server(httpServer2);
-  socket.on("connection", () => {
-  });
-};
-
-// src/api/index.ts
-var import_express3 = __toESM(require_express2());
-
-// src/api/game/index.ts
-var import_express = __toESM(require_express2());
-
 // node_modules/.pnpm/zod@3.19.1/node_modules/zod/lib/index.mjs
 var util;
 (function(util2) {
@@ -33674,6 +33661,12 @@ var EGameStatus = /* @__PURE__ */ ((EGameStatus2) => {
   return EGameStatus2;
 })(EGameStatus || {});
 var ZEnumGameStatus = mod.nativeEnum(EGameStatus);
+var EPlayerTurn = /* @__PURE__ */ ((EPlayerTurn2) => {
+  EPlayerTurn2["FIRST"] = "FIRST";
+  EPlayerTurn2["SECOND"] = "SECOND";
+  return EPlayerTurn2;
+})(EPlayerTurn || {});
+var ZEnumPlayerTurn = mod.nativeEnum(EPlayerTurn);
 var ECell = /* @__PURE__ */ ((ECell2) => {
   ECell2["FIRST"] = "FIRST";
   ECell2["SECOND"] = "SECOND";
@@ -33694,6 +33687,7 @@ var ZGameSchema = mod.object({
   start: mod.date(),
   users: mod.tuple([ZUserSchema, mod.union([ZUserSchema, mod.null()])]),
   status: ZEnumGameStatus,
+  turn: ZEnumPlayerTurn,
   board: ZBoardSchema
 });
 var ZIdGameSchema = mod.string();
@@ -33738,6 +33732,7 @@ var createGame = (user) => {
     start: new Date(),
     users: [user, null],
     status: "CREATED" /* CREATED */,
+    turn: "FIRST" /* FIRST */,
     board: [
       ["VOID" /* VOID */, "VOID" /* VOID */, "VOID" /* VOID */],
       ["VOID" /* VOID */, "VOID" /* VOID */, "VOID" /* VOID */],
@@ -33748,7 +33743,7 @@ var createGame = (user) => {
   return game;
 };
 var getById = (id) => games.get(id) || null;
-var getAll = () => games.values();
+var getAll = () => [...games.values()];
 var joinUser = (user, id) => {
   const game = games.get(id);
   if (!game)
@@ -33759,8 +33754,36 @@ var joinUser = (user, id) => {
   game.users[1] = user;
   return game;
 };
+var isUserInGame = (user, id) => {
+  const game = games.get(id);
+  if (!game)
+    return null;
+  return game.users.find((u) => (u == null ? void 0 : u.nickname) === user.nickname) ? game : null;
+};
+
+// src/wsocket/index.ts
+var initWSocket = (httpServer2) => {
+  const io2 = new Server(httpServer2);
+  io2.on("connection", (socket) => {
+    socket.on("join-group", ({ idGame, user }) => {
+      const game = isUserInGame(user, idGame);
+      if (!game)
+        return;
+      socket.join("game-" + game.id);
+    });
+    socket.on("move", ({ idGame, user }) => {
+      const game = isUserInGame(user, idGame);
+      if (!game)
+        return;
+    });
+  });
+};
+
+// src/api/index.ts
+var import_express3 = __toESM(require_express2());
 
 // src/api/game/index.ts
+var import_express = __toESM(require_express2());
 var router = (0, import_express.Router)();
 router.put("/join/:id", (req, res) => {
   try {

@@ -1,6 +1,7 @@
 import {
   ECell,
   EGameStatus,
+  EPlayerTurn,
   IdGame,
   IGame,
   IUser,
@@ -20,6 +21,7 @@ export const createGame = (user: IUser): IGame => {
     start: new Date(),
     users: [user, null],
     status: EGameStatus.CREATED,
+    turn: EPlayerTurn.FIRST,
     board: [
       [ECell.VOID, ECell.VOID, ECell.VOID],
       [ECell.VOID, ECell.VOID, ECell.VOID],
@@ -34,7 +36,7 @@ export const createGame = (user: IUser): IGame => {
 
 export const getById = (id: IdGame) => games.get(id) || null;
 
-export const getAll = () => games.values();
+export const getAll = () => [...games.values()];
 
 export const joinUser = (user: IUser, id: IdGame) => {
   const game = games.get(id);
@@ -43,4 +45,32 @@ export const joinUser = (user: IUser, id: IdGame) => {
   if (isComplete) return null;
   game.users[1] = user;
   return game;
+};
+
+export const isUserInGame = (user: IUser, id: IdGame) => {
+  const game = games.get(id);
+  if (!game) return null;
+
+  return game.users.find((u) => u?.nickname === user.nickname) ? game : null;
+};
+
+const whichTypeIsUser = (game: IGame, user: IUser) => {
+  const index = game.users.findIndex((u) => u?.nickname === user.nickname);
+  if (index === 0) {
+    return ECell.FIRST;
+  }
+  if (index === 1) {
+    return ECell.SECOND;
+  }
+  return null;
+};
+
+export const move = (
+  game: IGame,
+  user: IUser,
+  row: 0 | 1 | 2,
+  cell: 0 | 1 | 2
+) => {
+  // const type = whichTypeIsUser(game, user);
+  // game.board[row][cell];
 };

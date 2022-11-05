@@ -8,6 +8,12 @@ export enum EGameStatus {
 }
 export const ZEnumGameStatus = z.nativeEnum(EGameStatus);
 
+export enum EPlayerTurn {
+  FIRST = "FIRST",
+  SECOND = "SECOND",
+}
+export const ZEnumPlayerTurn = z.nativeEnum(EPlayerTurn);
+
 export enum ECell {
   FIRST = "FIRST",
   SECOND = "SECOND",
@@ -32,6 +38,7 @@ export const ZGameSchema = z.object({
   start: z.date(),
   users: z.tuple([ZUserSchema, z.union([ZUserSchema, z.null()])]),
   status: ZEnumGameStatus,
+  turn: ZEnumPlayerTurn,
   board: ZBoardSchema,
 });
 export type IGame = z.infer<typeof ZGameSchema>;

@@ -33679,7 +33679,8 @@ var ZBoardSchema = mod.tuple([
   mod.tuple([ZEnumCell, ZEnumCell, ZEnumCell])
 ]);
 var ZUserSchema = mod.object({
-  nickname: mod.string()
+  nickname: mod.string(),
+  id: mod.string()
 });
 var ZGameSchema = mod.object({
   id: mod.string(),
@@ -33751,6 +33752,8 @@ var joinUser = (user, id) => {
     return null;
   const isComplete = game.users.every((u) => !!u);
   if (isComplete)
+    return null;
+  if (game.users[0].nickname === user.nickname)
     return null;
   game.users[1] = user;
   game.status = "PLAYING" /* PLAYING */;
@@ -33832,12 +33835,17 @@ var getWinner = (game) => {
 
 // src/wsocket/index.ts
 var initWSocket = (httpServer2) => {
-  const io2 = new Server(httpServer2);
+  const io2 = new Server(httpServer2, {
+    cors: {
+      origin: "*"
+    }
+  });
   io2.on("connection", (socket) => {
     socket.on("join-group", ({ idGame, user }) => {
       const game = isUserInGame(user, idGame);
       if (!game)
         return;
+      console.log(user);
       socket.join("game-" + game.id);
     });
     socket.on("move", ({ idGame, user, row, cell }) => {

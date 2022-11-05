@@ -29,6 +29,7 @@ export type IBoard = z.infer<typeof ZBoardSchema>;
 
 export const ZUserSchema = z.object({
   nickname: z.string(),
+  id: z.string(),
 });
 export type IUser = z.infer<typeof ZUserSchema>;
 

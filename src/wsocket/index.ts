@@ -26,6 +26,7 @@ export const initWSocket = (httpServer: HttpServer) => {
     socket.on("join-group", ({ idGame, user }: IWSocketJoinGroup) => {
       const game = isUserInGame(user, idGame);
       if (!game) return;
+      console.log(user);
       socket.join("game-" + game.id);
     });
 
